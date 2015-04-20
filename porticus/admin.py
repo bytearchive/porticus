@@ -10,9 +10,11 @@ from filebrowser.settings import ADMIN_THUMBNAIL
 
 from porticus.models import Ressource, Gallery, Album
 
+
 def slide_image_thumbnail(obj):
     if obj.image and obj.image.filetype == "Image":
-        return '<img src="%s" />' % obj.image.version_generate(ADMIN_THUMBNAIL).url
+        return '<img src="%s" />' % obj.image.version_generate(
+            ADMIN_THUMBNAIL).url
     else:
         return _('No image for %s') % unicode(obj)
 slide_image_thumbnail.short_description = _('image')
@@ -24,7 +26,8 @@ class GalleryAdmin(admin.ModelAdmin):
     search_fields = ('name', 'description', 'slug')
     list_filter = ('creation_date', 'publish')
     list_editable = ('priority', 'publish', 'template_name')
-    list_display = (slide_image_thumbnail, 'name', 'publish', 'priority', 'template_name')
+    list_display = (slide_image_thumbnail, 'name', 'publish', 'priority',
+                    'template_name', 'owner')
     list_display_links = (slide_image_thumbnail, 'name')
     prepopulated_fields = {'slug': ('name', )}
     fieldsets = (
@@ -39,6 +42,10 @@ class GalleryAdmin(admin.ModelAdmin):
         }),
     )
 
+    def save_model(self, request, obj, form, change):
+        obj.owner = request.user
+        obj.save()
+
 
 class RessourceInline(admin.StackedInline):
     model = Ressource
@@ -50,10 +57,11 @@ class AlbumAdmin(MPTTModelAdmin):
     search_fields = ('name', 'description', 'slug')
     list_filter = ('creation_date', 'gallery', 'publish')
     list_editable = ('priority', 'publish', 'template_name')
-    list_display = ('name', 'slug', 'publish', 'priority', 'template_name', 'ressources_count')
+    list_display = ('name', 'slug', 'publish', 'priority', 'template_name',
+                    'ressources_count', 'owner')
     fieldsets = (
         (None, {
-            'fields': ('gallery','parent',)
+            'fields': ('gallery', 'parent',)
         }),
         (None, {
             'fields': ('name', 'image',)
@@ -71,6 +79,10 @@ class AlbumAdmin(MPTTModelAdmin):
     ]
     mptt_level_indent = 25
 
+    def save_model(self, request, obj, form, change):
+        obj.owner = request.user
+        obj.save()
+
     def ressources_count(self, album):
         return album.ressource_set.all().count()
     ressources_count.short_description = _('Ressources')
@@ -81,7 +93,8 @@ class RessourceAdmin(admin.ModelAdmin):
     search_fields = ('name', 'description', 'slug')
     list_filter = ('file_type', 'creation_date', 'album', 'publish')
     list_editable = ('priority', 'publish')
-    list_display = (slide_image_thumbnail, 'album', 'name', 'publish', 'priority', 'file_type')
+    list_display = (slide_image_thumbnail, 'album', 'name',
+                    'publish', 'priority', 'file_type', 'owner')
     filter_horizontal = ('related',)
     prepopulated_fields = {'slug': ('name', )}
     fieldsets = (
@@ -92,7 +105,7 @@ class RessourceAdmin(admin.ModelAdmin):
             'fields': ('name', 'slug', 'image'),
         }),
         (_('File'), {
-            'fields': ('file_type', 'file', 'file_url'), 
+            'fields': ('file_type', 'file', 'file_url'),
             'description': _('You must fill one of these fields'),
         }),
         (None, {
@@ -104,6 +117,9 @@ class RessourceAdmin(admin.ModelAdmin):
         }),
     )
 
+    def save_model(self, request, obj, form, change):
+        obj.owner = request.user
+        obj.save()
 
 admin.site.register(Gallery, GalleryAdmin)
 admin.site.register(Album, AlbumAdmin)

@@ -7,6 +7,7 @@ from django.conf import settings
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
+from django.contrib.auth.models import User
 
 from porticus.managers import RessourcePublishedManager, GalleryPublishedManager, AlbumPublishedManager
 
@@ -40,6 +41,8 @@ class Gallery(models.Model):
     creation_date = models.DateTimeField(_('creation date'), auto_now_add=True)
 
     slug = models.SlugField(_('slug'), unique=True, max_length=100)
+
+    owner = models.ForeignKey(User, blank=True, null=True)
 
     objects = models.Manager()
     published = GalleryPublishedManager()
@@ -84,6 +87,8 @@ class Album(MPTTModel):
     creation_date = models.DateTimeField(_('creation date'), auto_now_add=True)
 
     slug = models.SlugField(_('slug'), unique=True, max_length=100)
+
+    owner = models.ForeignKey(User, blank=True, null=True)
 
     def __unicode__(self):
         return self.name
@@ -150,6 +155,8 @@ class Ressource(models.Model):
     slug = models.SlugField(_('slug'), max_length=100)
 
     tags = TagField(_('tags'))
+
+    owner = models.ForeignKey(User, blank=True, null=True)
 
     objects = models.Manager()
     published = RessourcePublishedManager()

@@ -83,6 +83,16 @@ class AlbumAdmin(MPTTModelAdmin):
         obj.owner = request.user
         obj.save()
 
+    def save_formset(self, request, form, formset, change):
+        """
+        Given an inline formset save it to the database.
+        """
+        instances = formset.save(commit=False)
+        for instance in instances:
+            instance.owner = request.user
+            instance.save()
+        formset.save_m2m()
+
     def ressources_count(self, album):
         return album.ressource_set.all().count()
     ressources_count.short_description = _('Ressources')
